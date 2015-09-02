@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>reveal.js - The HTML Presentation Framework</title>
+
+		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+		<meta name="author" content="Hakim El Hattab">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/white.css" id="theme">
+
+		<!-- Code syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<style>
+		p {
+			text-align: left;
+		}
+		.vspace {
+			visibility: hidden;
+			height: 50px;
+		}
+		.hspace {
+			visibility: hidden;
+			width: 50px;
+		}
+		#title-author {
+			text-align: center;
+		}
+
+		.key {
+			font-size: 75%;
+		}
+
+		rect { stroke: #000; fill: #fff; shape-rendering: crispEdges; }
+		rect.on { fill: #fc0; }
+		rect.off { fill: #0cf; }
+		path { stroke: #000; fill: none; }
+		</style>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+<div class="reveal"> <div class="slides">
+
+<section>
+	<h1>Algunos trucos</h1>
+	<h4>del prácticante de machine learning</h4>
+	<p id="title-author"><small>
+		<a href="mailto:rafacarrascosa@gmail.com">Rafael Carrascosa</a> -
+		<a href="http://www.meetup.com/Encuentros-Data-Science-Cordoba/events/224080494/">Encuentro Data Science Cordoba</a>
+	</small></p>
+</section>
+
+<section data-markdown data-separator="^\n\n\n" data-separator-vertical="^\n\n" data-separator-notes="^Note:"><script type="text/template">
+### Outline
+
+- Trucos de hashing
+- Reservoir sampling
+- Features heterogeneos
+- Clasificación con muchas clases
+- Cierre y preguntas
+
+Note:
+El formato de la charla un repaso de un popurri de trucos heterogeneos.
+
+Mi intención es predicar sobre la existencia de técnicas buenas, útils y que se
+usan poco, sin entrar en detalle. Para profundizar hay mucho más y de mejor
+calidad en la web.
+
+Me sirve para dar la charla que me interrumpan con preguntas y comentarios.
+</script></section>
+
+<section data-markdown data-separator="^\n\n\n" data-separator-vertical="^\n\n" data-separator-notes="^Note:"><script type="text/template">
+### Bloom filter
+
+Estructura de datos que representa un conjunto y tiene:
+- Tiempo de insercion constante
+- Tiempo de query constante
+- Uso de memoria constante
+
+**Catch**: Hay una probabilidad pequeña de que la query de un falso positivo.
+
+</script></section>
+
+<section>
+<div id="vis" style="position: relative;"></div>
+<small><label for="key">Key:</label> <input type="text" id="key"> <button id="add" class="first last">Add</button></small>
+<span class="hspace">a</span>
+<small>Credit to <a href="https://www.jasondavies.com/bloomfilter/">Jason Davies</a></small>
+<aside class="notes">
+El tamaño de la tabla y la cantidad de funciones de hash regulan la probabilidad
+de falso positivo.
+</aside>
+</section>
+
+<section data-markdown data-separator="^\n\n\n" data-separator-vertical="^\n\n" data-separator-notes="^Note:"><script type="text/template">
+### Count min-sketch
+
+Estructura de datos para conteo de frecuencia que tiene:
+- Tiempo de insercion constante
+- Tiempo de query constante
+- Uso de memoria constante
+
+Similar a bloom filter, pero con conteo.
+Muy util para estimar probabilidades en streams de cosas.
+
+Link a [Wikipedia](https://en.wikipedia.org/wiki/Count%E2%80%93min_sketch).
+
+Note:
+Es un esquema similar al de bloom filters, pero en vez de tener un array de bits
+tiene un array de enteros que se incrementa con cada inserción.
+
+A la hora de hacer una query se computa el valor mínimo de las partes del array
+seleccionadas por la función de hash.
+</script></section>
+
+<section data-markdown data-separator="^\n\n\n" data-separator-vertical="^\n\n" data-separator-notes="^Note:"><script type="text/template">
+### Hashing vectorizer
+
+Bag of words
+
+    La casa verde      --> 00010001100
+	El auto verde      --> 01000000101
+	El auto de la casa --> 01010101001
+
+Tradicionalmente esto requiere un diccionario de *label* a *indices*.
+
+Un hashing vectorizer reemplaza este diccionario con un hash que va de *label*
+a *indices*.
+
+Pros: Memoria constante, no requiere entrenamiento.
+
+Cons: Puede haber colisiones
+
+Note:
+Hay riesgo de colision pero el vectorizador no necesita entrenarse ni consume
+memoria. Es stateless.
+</script></section>
+
+<section data-markdown data-separator="^\n\n\n" data-separator-vertical="^\n\n" data-separator-notes="^Note:"><script type="text/template">
+### Locality sensitive hashing
+
+Problema: Encontrar pares de objetos similares en una bolsa grande.
+
+Caso real: Usuarios de telefono celular duplicados.
+
+Como ejemplo voy a comentar una sola técnica para esto:
+[Random projection](https://en.wikipedia.org/wiki/Locality-sensitive_hashing#Random_projection),
+pero hay todo una rama de estudio sobre este tema que se llama
+[Locality sensitive hashing](https://en.wikipedia.org/wiki/Locality-sensitive_hashing).
+
+Note:
+Conoci alguien al que le paso esto: Una empresa de telefonia quiere saber
+cuales números de telefonos celulares son "duplicados", ie: Son usados por la
+misma persona. La dificultad: Hay 60 millones de números de celular entregados,
+todos contra todos no va ni a gancho.
+
+Tambien se puede pensar como una forma de reducción de dimensionalidad donde los
+features son binarios.
+</script></section>
+
+<section>
+	<h3>Random projection</h3>
+	<img src="images/random_projection.png"></img>
+	<p><small><a href="http://www.bogotobogo.com/Algorithms/Locality_Sensitive_Hashing_LSH_using_Cosine_Distance_Similarity.php">image credit link</a></small></p>
+</section>
+
+<section data-markdown data-separator="^\n\n\n" data-separator-vertical="^\n\n" data-separator-notes="^Note:"><script type="text/template">
+### Reservoir sampling
+
+**Meta**: Tomar una muestra aleatoria de un stream de datos que no entra en memoria y
+cuya longitud es desconocida.
+
+Existe un algoritmo para esto que se llama [Reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling)
+
+![reservoir](images/reservoir.png "Credit: http://engineering.bloomreach.com/mapreduce-fun-sampling-for-large-data-set/")
+
+Note:
+Llenar un reservorio de K elementos y por cada elemento nuevo usar un número
+aleatorio para decidir si entra (reemplazando a otro) dentro del resevorio.
+En todo momento el reservorio tiene la muestra aleatoria. Se puede analizar
+como una recursion.
+
+Si se implementa correctamente el output es una muestra aleatoria barajada
+aleatoriamente.
+
+</script></section>
+
+<section data-markdown data-separator="^\n\n\n" data-separator-vertical="^\n\n" data-separator-notes="^Note:"><script type="text/template">
+### Features heterogeneos: SVD / PCA
+
+**Problema**: Tengo 1 feature rico (1 columna) y 1 feature ralo (100000 columnas)
+¿Como los uso juntos?
+
+**Caso de estudio**: Supermercado. Predecir si un cliente va a comprar un producto.
+
+**Approach**: Usar reducción de dimensionalidad en el feature ralo y concatenarlo
+con el feature rico.
+
+[SVD](http://scikit-learn.org/stable/modules/decomposition.html#truncated-singular-value-decomposition-and-latent-semantic-analysis)
+y [PCA](https://en.wikipedia.org/wiki/Principal_component_analysis)
+son métodos de reducción de dimensionalidad no supervisados.
+
+Note:
+- Feature rico: Cuantas veces el cliente compró el producto antes.
+- Feature ralo: Palabras en el título/descripción del producto.
+</script></section>
+
+
+<section data-markdown data-separator="^\n\n\n" data-separator-vertical="^\n\n" data-separator-notes="^Note:"><script type="text/template">
+### Features heterogeneos: Densificar con clasificador
+
+Mismo **problema**, mismo **approach**, distinta **reducción de dimensionalidad**.
+
+Entrenar un **clasificador** usando solo el feature ralo y concatenar su
+**función de decision** con el feature rico.
+
+A esta técnica le dicen [Stacking](https://en.wikipedia.org/wiki/Ensemble_learning#Stacking).
+
+Note:
+En vez de usar un algoritmos no supervisado usar la función de decisión de
+un clasificador como una método supervisado de reducción de dimensionalidad.
+
+En mi experiencia personal esto da muy buenos resultados.
+
+
+![](http://cloud-4.steamusercontent.com/ugc/39733976193734381/3BC7F6559A807D9BE92FA577A328C83D47D5B9A7/
+)
+</script></section>
+
+<section data-markdown data-separator="^\n\n\n" data-separator-vertical="^\n\n" data-separator-notes="^Note:"><script type="text/template">
+### Clasificación con muchas clases
+
+a <!-- .element: class="vspace" -->
+
+Cuando hay muchas clases vale la pena probar:
+
+ - Usar un clasificador nativo multiclase.
+ - Jerárquico
+ - Esquema generativo-ish
+
+
+Note:
+El baseline no informado es 1/10000 de accuracy, hay que remarla de abajo.
+Tiempos de entrenamiento puede explotar mal. OneVsOne o OneVsRest
+No hay silver bullet.
+</script></section>
+
+<section>
+	<h3>Jerárquico</h3>
+	<img src="images/a.jpg"></img>
+	<small>Requiere entrenar M clasificadores, pero con menos data.</small>
+	<small><a href="http://popeyethecat.deviantart.com/art/Taxonomy-Tree-of-Toys-159495022">Credito imagen</a>.</small>
+	<aside class="notes">
+		El arbol de clases puede estar dado por el problema o ser inducido.
+	</aside>
+</section>
+
+<section>
+	<h3>Esquema generativo-ish</h3>
+	<p>En vez de entrenar un clasificador \[ f(features) \rightarrow category \]</p>
+	<p>Entrenar un clasificador \[ f(features, category) \rightarrow \{ 0 , 1 \} \]</p>
+	<p class="vspace">a</p>
+	<p><b>Pros</b>: Entrenamiento crece, features compactos</p>
+	<p><b>Cons</b>: Computacionalmente caro, requiere cuidado</p>
+	<aside class="notes">
+		En mi experiencia siempre requirio mucho cuidado llevar el problema a
+		esta forma y existe un riesgo de que no de mejor performance que con el
+		esquema vainilla.
+	</aside>
+</section>
+
+<section data-markdown data-separator="^\n\n\n" data-separator-vertical="^\n\n" data-separator-notes="^Note:"><script type="text/template">
+Cierre y preguntas
+------------------
+</script></section>
+
+</div> </div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available at:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				width: 960,  // 960, 1440
+			    height: 700,  // 700, 1050
+
+				transition: 'none', // none/fade/slide/convex/concave/zoom
+
+				// Optional reveal.js plugins
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/math/math.js', async: true }
+				]
+			});
+
+		</script>
+		<script src="lib/js/d3.min.js"></script>
+		<script src="lib/js/bloomfilter.js"></script>
+		<script>
+		var width = 750,
+		    height = 600;
+
+		var bloom = new BloomFilter(50, 3),
+		    keys = [],
+		    keySet = {},
+		    colour = d3.scale.category20c();
+
+		var bw = height / bloom.m,
+		    dy = 20;
+
+		var queryText = "";
+
+		var diagonal = d3.svg.diagonal()
+		    .projection(function(d) { return [d.y, d.x]; })
+		    .source(function(d) { return {y: 100, x: d.from * dy}; })
+		    .target(function(d) { return {y: (width - bw) / 2, x: (d.to + .5) * bw}; });
+
+		d3.select("#vis").selectAll("*").remove();
+		var svg = d3.select("#vis").append("svg")
+		    .attr("width", width - 100)
+		    .attr("height", height + 20);
+
+		svg.append("defs")
+		  .append("marker")
+		    .attr("id", "arrow")
+		    .attr("viewBox", "0 -5 10 10")
+		    .attr("refX", 10)
+		    .attr("refY", 0)
+		    .attr("markerWidth", 6)
+		    .attr("markerHeight", 10)
+		    .attr("orient", "auto")
+		  .append("path")
+		    .style("fill", "#000")
+		    .attr("d", "M0,-5L10,0L0,5Z");
+
+		var vis = svg.append("g")
+		    .attr("transform", "translate(10,10)");
+
+		var div = d3.select("#vis")
+		    .style("position", "relative")
+		  .append("div")
+		    .style("position", "absolute")
+		    .style("left", width - 100 + "px")
+		    .style("top", "50%")
+		    .style("margin-top", "-1.5em");
+		div.append("input")
+		    .attr("type", "text")
+		    .on("keyup", function() {
+		      queryText = this.value;
+		      update();
+		    });
+		var result = div.append("small");
+
+		update();
+
+		var keyInput = d3.select("#key")
+		    .on("keyup", function() {
+		      if (d3.event.keyCode === 13) add();
+		    });
+		d3.select("#add").on("click", add);
+
+		function add() {
+		  var key = keyInput.property("value");
+		  if (!(key in keySet)) {
+		    keySet[key] = 1;
+		    bloom.add(key);
+		    keys.push({key: key, value: locations(bloom, key)});
+		    update();
+		  }
+		  keyInput.property("value", "");
+		}
+
+		function update() {
+		  var offLocations = locations(bloom, queryText);
+
+		  var rect = vis.selectAll("rect")
+		      .data(buckets(bloom, offLocations));
+		  rect.enter().append("rect")
+		      .attr("width", bw)
+		      .attr("height", bw)
+		      .attr("x", (width - bw) / 2)
+		      .attr("y", function(d, i) { return i * bw; });
+		  rect.exit().remove();
+		  rect.attr("class", function(d) { return d === 1 ? "on" : d === -1 ? "off" : null; });
+
+		  var key = vis.selectAll("text.key")
+		      .data(keys);
+		  key.enter().append("text")
+		      .attr("class", "key")
+		      .attr("x", 100)
+		      .attr("text-anchor", "end")
+		      .attr("dx", "-.3em")
+		      .attr("dy", ".2em")
+		      .text(function(d) { return d.key; });
+		  key.exit().remove();
+		  key.attr("y", function(d, i) { return height / 2 + (i - keys.length / 2) * dy; });
+
+		  var link = vis.selectAll("path.location")
+		      .data(links(bloom, keys));
+		  link.enter().append("path")
+		      .attr("class", "location")
+		      .attr("marker-end", "url(#arrow)")
+		      .attr("transform", "translate(0," + height / 2 + ")");
+		  link.exit().remove();
+		  link.attr("d", diagonal);
+
+		  var link = vis.selectAll("path.query")
+		      .data(links(bloom, [{key: queryText, value: offLocations}]));
+		  link.enter().append("path")
+		      .attr("class", "query")
+		      .attr("marker-end", "url(#arrow)")
+		      .attr("transform", "translate(" + width + "," + height / 2 + ")scale(-1,1)");
+		  link.exit().remove();
+		  link.attr("d", diagonal);
+		  result.text(bloom.test(queryText) ? " Probably there." : " Definitely not there.");
+		}
+
+		function links(bloom, list) {
+		  var a = [];
+		  list.forEach(function(d, i) {
+		    var b = {};
+		    d.value.forEach(function(target) {
+		      b[target] = 1;
+		    });
+		    for (var target in b) {
+		      a.push({from: +i - list.length / 2, to: +target - bloom.m / 2});
+		    }
+		  });
+		  return a;
+		}
+
+		function buckets(bloom, off) {
+		  var d = bloom.buckets,
+		      a = [],
+		      m = bloom.m,
+		      k,
+		      x,
+		      n;
+		  for (var i = 0, j = 0; i < m; i += 32, j++) {
+		    var x = d[j];
+		    for (var k = 0, n = Math.min(m - i, 32); k < n; ++k) {
+		      a.push((x >> k) & 1);
+		    }
+		  }
+		  off.forEach(function(i) {
+		    if (a[i] === 0) a[i] = -1;
+		  });
+		  return a;
+		}
+
+		function locations(bloom, key) {
+		  var l = bloom.locations(key),
+		      k = bloom.k,
+		      i = -1,
+		      a = [];
+		  for (var i = 0; i < k; ++i) a[i] = l[i];
+		  return a;
+		}
+		</script>
+
+	</body>
+</html>
